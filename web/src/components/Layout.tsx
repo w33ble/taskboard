@@ -5,6 +5,7 @@ import {
   FolderKanban,
   Users,
   Ticket,
+  Tag,
   Zap,
   TerminalSquare,
 } from "lucide-react";
@@ -15,6 +16,7 @@ const navItems = [
   { to: "/projects", icon: FolderKanban, label: "Projects" },
   { to: "/teams", icon: Users, label: "Teams" },
   { to: "/tickets", icon: Ticket, label: "Tickets" },
+  { to: "/labels", icon: Tag, label: "Labels" },
 ];
 
 export default function Layout() {

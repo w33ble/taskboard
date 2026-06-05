@@ -9,7 +9,8 @@ import {
   Calendar,
   Ticket as TicketIcon,
 } from "lucide-react";
-import { api, type Ticket, type Project, type Team } from "../api/client";
+import LabelBadge from "../components/LabelBadge";
+import { api, type Ticket, type Project, type Team, type TicketUpdateData, type TicketCreateData } from "../api/client";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
 
@@ -102,13 +103,13 @@ export default function Tickets() {
     return true;
   });
 
-  const handleCreate = async (data: Partial<Ticket>) => {
+  const handleCreate = async (data: TicketCreateData) => {
     await api.tickets.create(data);
     setShowCreate(false);
     load();
   };
 
-  const handleUpdate = async (id: string, data: Partial<Ticket>) => {
+  const handleUpdate = async (id: string, data: TicketUpdateData) => {
     await api.tickets.update(id, data);
     load();
   };
@@ -191,6 +192,7 @@ export default function Tickets() {
                 <th className="text-left px-6 py-3 font-medium">Title</th>
                 <th className="text-left px-6 py-3 font-medium">Status</th>
                 <th className="text-left px-6 py-3 font-medium">Priority</th>
+                <th className="text-left px-6 py-3 font-medium">Labels</th>
                 <th className="text-left px-6 py-3 font-medium">Due</th>
                 <th className="w-10" />
               </tr>
@@ -217,6 +219,17 @@ export default function Tickets() {
                   </td>
                   <td className="px-6 py-3">
                     <PriorityBadge priority={ticket.priority} />
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {ticket.labels && ticket.labels.length > 0
+                        ? ticket.labels.map((label) => (
+                            <LabelBadge key={label.id} label={label} />
+                          ))
+                        : (
+                          <span className="text-xs text-slate-700">—</span>
+                        )}
+                    </div>
                   </td>
                   <td className="px-6 py-3">
                     {ticket.dueDate ? (

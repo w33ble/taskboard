@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { X, Trash2, CheckCircle2, Circle, Pencil, Eye } from "lucide-react";
 import Markdown from "react-markdown";
-import { api, type Ticket, type Project, type Team, type Subtask } from "../api/client";
+import { api, type Ticket, type Project, type Team, type Subtask, type TicketUpdateData } from "../api/client";
+import LabelPicker from "./LabelPicker";
 
 const STATUSES = ["todo", "in_progress", "done"];
 const PRIORITIES = ["urgent", "high", "medium", "low"];
@@ -24,7 +25,7 @@ export default function TicketPanel({
   projects: Project[];
   teams: Team[];
   onClose: () => void;
-  onUpdate: (id: string, data: Partial<Ticket>) => void;
+  onUpdate: (id: string, data: TicketUpdateData) => void;
   onDelete: (id: string) => void;
 }) {
   const [title, setTitle] = useState(ticket.title);
@@ -35,6 +36,7 @@ export default function TicketPanel({
   const [teamId, setTeamId] = useState(ticket.teamId || "");
   const [subtasks, setSubtasks] = useState<Subtask[]>(ticket.subtasks || []);
   const [newSubtask, setNewSubtask] = useState("");
+  const [labelIds, setLabelIds] = useState<string[]>(ticket.labels?.map(l => l.id) || []);
   const [dirty, setDirty] = useState(false);
   const [descMode, setDescMode] = useState<"preview" | "write">(description ? "preview" : "write");
 
@@ -48,6 +50,7 @@ export default function TicketPanel({
       priority,
       dueDate: dueDate || undefined,
       teamId: teamId || undefined,
+      labels: labelIds,
     });
     setDirty(false);
   };
@@ -240,6 +243,19 @@ export default function TicketPanel({
                 {projects.find((p) => p.id === ticket.projectId)?.name || "—"}
               </div>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-500 mb-1.5">
+              Labels
+            </label>
+            <LabelPicker
+              selectedLabelIds={labelIds}
+              onChange={(ids) => {
+                setLabelIds(ids);
+                markDirty();
+              }}
+            />
           </div>
 
           {dirty && (

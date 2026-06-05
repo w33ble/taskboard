@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import type { Ticket, Project, Team } from "../api/client";
+import type { TicketCreateData, Project, Team } from "../api/client";
+import LabelPicker from "./LabelPicker";
 
 const PRIORITIES = ["urgent", "high", "medium", "low"];
 
@@ -15,7 +16,7 @@ export default function CreateTicketModal({
   teams: Team[];
   defaultStatus?: string;
   onClose: () => void;
-  onCreate: (data: Partial<Ticket>) => void;
+  onCreate: (data: TicketCreateData) => void;
 }) {
   const [projectId, setProjectId] = useState(projects[0]?.id || "");
   const [title, setTitle] = useState("");
@@ -23,6 +24,7 @@ export default function CreateTicketModal({
   const [priority, setPriority] = useState("medium");
   const [dueDate, setDueDate] = useState("");
   const [teamId, setTeamId] = useState("");
+  const [labelIds, setLabelIds] = useState<string[]>([]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +37,7 @@ export default function CreateTicketModal({
       status: defaultStatus || "todo",
       dueDate: dueDate || undefined,
       teamId: teamId || undefined,
+      labels: labelIds,
     });
   };
 
@@ -146,6 +149,15 @@ export default function CreateTicketModal({
                 ))}
               </select>
             </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              Labels
+            </label>
+            <LabelPicker
+              selectedLabelIds={labelIds}
+              onChange={setLabelIds}
+            />
           </div>
         </div>
 

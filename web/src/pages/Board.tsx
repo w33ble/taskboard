@@ -24,7 +24,8 @@ import {
   Users,
   Plus,
 } from "lucide-react";
-import { api, type Ticket, type Project, type Team, type BoardColumn } from "../api/client";
+import LabelBadge from "../components/LabelBadge";
+import { api, type Ticket, type Project, type Team, type BoardColumn, type TicketUpdateData, type TicketCreateData } from "../api/client";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
 
@@ -135,6 +136,13 @@ function TicketCard({
               {team.name}
             </span>
           )}
+        </div>
+      )}
+      {ticket.labels && ticket.labels.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {ticket.labels.map((label) => (
+            <LabelBadge key={label.id} label={label} />
+          ))}
         </div>
       )}
       {ticket.dueDate && (
@@ -341,7 +349,7 @@ export default function Board() {
     setSelectedTicket(ticket);
   };
 
-  const handleUpdate = async (id: string, data: Partial<Ticket>) => {
+  const handleUpdate = async (id: string, data: TicketUpdateData) => {
     await api.tickets.update(id, data);
     loadBoard();
   };
@@ -351,7 +359,7 @@ export default function Board() {
     loadBoard();
   };
 
-  const handleCreate = async (data: Partial<Ticket>) => {
+  const handleCreate = async (data: TicketCreateData) => {
     await api.tickets.create(data);
     setCreateForStatus(null);
     loadBoard();
