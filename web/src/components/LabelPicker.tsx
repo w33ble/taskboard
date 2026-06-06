@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { api, Label } from "../api/client";
+import { api } from "../api/client";
+import type { Label } from "../api/client";
 import LabelBadge from "./LabelBadge";
 
 interface LabelPickerProps {

@@ -1,5 +1,5 @@
 import { X } from "lucide-react";
-import { Label } from "../api/client";
+import type { Label } from "../api/client";
 
 interface LabelBadgeProps {
   label: Label;
