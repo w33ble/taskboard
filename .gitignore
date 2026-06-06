@@ -31,3 +31,8 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Tools
+.playwright-cli
+.omo
+
