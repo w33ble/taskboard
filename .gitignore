@@ -36,3 +36,5 @@ Thumbs.db
 .playwright-cli
 .omo
 
+# Assets
+dist/
