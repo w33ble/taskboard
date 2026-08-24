@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,7 +9,8 @@ import {
   Zap,
   TerminalSquare,
 } from "lucide-react";
-import TerminalPanel from "./TerminalPanel";
+
+const TerminalPanel = lazy(() => import("./TerminalPanel"));
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Board" },
@@ -77,10 +78,14 @@ export default function Layout() {
         <main className="flex-1 overflow-auto bg-slate-950">
           <Outlet />
         </main>
-        <TerminalPanel
-          isOpen={terminalOpen}
-          onClose={() => setTerminalOpen(false)}
-        />
+        {terminalOpen && (
+          <Suspense fallback={null}>
+            <TerminalPanel
+              isOpen={terminalOpen}
+              onClose={() => setTerminalOpen(false)}
+            />
+          </Suspense>
+        )}
       </div>
     </div>
   );
