@@ -13,9 +13,10 @@ Single binary. SQLite-backed. No Docker, no external database, no runtime depend
 ## Features
 
 - **Kanban Board** — drag-and-drop ticket management across Todo, In Progress, and Done columns
-- **Projects** — organize work with customizable projects (icons, colors, prefixes)
+- **Realtime Updates** — the board refreshes live via Server-Sent Events, so changes from other tabs, the CLI, or AI assistants appear instantly
+- **Projects** — organize work with customizable projects (icons, colors, prefixes); the selected board persists in the URL
 - **Teams** — assign tickets to teams
-- **Tickets** — priority levels, due dates, labels, subtasks, dependencies (blocked by)
+- **Tickets** — priority levels, due dates, labels, subtasks, dependencies (blocked by), and image attachments (stored in SQLite, 8MB cap)
 - **Embedded Terminal** — run AI coding agents (opencode, Claude Code) directly from the web UI
 - **CLI** — manage everything from the terminal
 - **MCP Server** — 22 tools for AI-native project management via Model Context Protocol
