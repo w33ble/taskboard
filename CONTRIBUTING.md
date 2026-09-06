@@ -4,7 +4,7 @@ Thanks for your interest in contributing! Here's how to get started.
 
 ## Development Setup
 
-1. **Prerequisites**: Go 1.24+, Node.js 22+
+1. **Prerequisites**: Go 1.26+, Node.js 22+
 2. Clone the repo:
    ```bash
    git clone https://github.com/tcarac/taskboard.git

@@ -39,7 +39,7 @@ cd taskboard
 make build
 ```
 
-Requires Go 1.24+ and Node.js 22+.
+Requires Go 1.26+ and Node.js 22+.
 
 ## Usage
 
