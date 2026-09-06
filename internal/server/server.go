@@ -21,10 +21,11 @@ import (
 type Server struct {
 	store  *db.Store
 	router chi.Router
+	events *sseHub
 }
 
 func New(store *db.Store, webFS fs.FS) *Server {
-	s := &Server{store: store}
+	s := &Server{store: store, events: newSSEHub()}
 	s.setupRoutes(webFS)
 	return s
 }
@@ -90,6 +91,7 @@ func (s *Server) setupRoutes(webFS fs.FS) {
 		})
 
 		r.Get("/board", s.getBoard)
+		r.Get("/events", s.handleEvents)
 		r.Get("/terminal/ws", s.handleTerminalWS)
 	})
 
@@ -162,6 +164,7 @@ func (s *Server) createProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventProjectsUpdated, nil)
 	writeJSON(w, http.StatusCreated, p)
 }
 
@@ -180,6 +183,7 @@ func (s *Server) updateProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "project not found")
 		return
 	}
+	s.events.broadcast(EventProjectsUpdated, nil)
 	writeJSON(w, http.StatusOK, p)
 }
 
@@ -188,6 +192,7 @@ func (s *Server) deleteProject(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventProjectsUpdated, nil)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -231,6 +236,7 @@ func (s *Server) createTeam(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTeamsUpdated, nil)
 	writeJSON(w, http.StatusCreated, t)
 }
 
@@ -249,6 +255,7 @@ func (s *Server) updateTeam(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "team not found")
 		return
 	}
+	s.events.broadcast(EventTeamsUpdated, nil)
 	writeJSON(w, http.StatusOK, t)
 }
 
@@ -257,6 +264,7 @@ func (s *Server) deleteTeam(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTeamsUpdated, nil)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -306,6 +314,7 @@ func (s *Server) createTicket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	writeJSON(w, http.StatusCreated, t)
 }
 
@@ -324,6 +333,7 @@ func (s *Server) updateTicket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "ticket not found")
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	writeJSON(w, http.StatusOK, t)
 }
 
@@ -346,6 +356,7 @@ func (s *Server) moveTicket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "ticket not found")
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	writeJSON(w, http.StatusOK, t)
 }
 
@@ -354,6 +365,7 @@ func (s *Server) deleteTicket(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -372,6 +384,7 @@ func (s *Server) addSubtask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	writeJSON(w, http.StatusCreated, st)
 }
 
@@ -381,6 +394,7 @@ func (s *Server) toggleSubtask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	writeJSON(w, http.StatusOK, st)
 }
 
@@ -389,6 +403,7 @@ func (s *Server) deleteSubtask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventTicketsUpdated, nil)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -419,6 +434,7 @@ func (s *Server) createLabel(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventLabelsUpdated, nil)
 	writeJSON(w, http.StatusCreated, l)
 }
 
@@ -437,6 +453,7 @@ func (s *Server) updateLabel(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "label not found")
 		return
 	}
+	s.events.broadcast(EventLabelsUpdated, nil)
 	writeJSON(w, http.StatusOK, l)
 }
 
@@ -445,6 +462,7 @@ func (s *Server) deleteLabel(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	s.events.broadcast(EventLabelsUpdated, nil)
 	w.WriteHeader(http.StatusNoContent)
 }
 
