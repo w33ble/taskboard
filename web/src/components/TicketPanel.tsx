@@ -89,6 +89,7 @@ export default function TicketPanel({
   };
 
   const handleDeleteAttachment = async (id: string) => {
+    if (!window.confirm("Delete this image?")) return;
     setAttachmentError("");
     try {
       await api.attachments.delete(id);
