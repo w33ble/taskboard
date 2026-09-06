@@ -36,10 +36,11 @@ type Ticket struct {
 	UpdatedAt   time.Time  `json:"updatedAt"`
 
 	// Populated fields (not stored directly)
-	ProjectPrefix string    `json:"projectPrefix,omitempty"`
-	Labels        []Label   `json:"labels,omitempty"`
-	Subtasks      []Subtask `json:"subtasks,omitempty"`
-	BlockedBy     []string  `json:"blockedBy,omitempty"`
+	ProjectPrefix string       `json:"projectPrefix,omitempty"`
+	Labels        []Label      `json:"labels,omitempty"`
+	Subtasks      []Subtask    `json:"subtasks,omitempty"`
+	BlockedBy     []string     `json:"blockedBy,omitempty"`
+	Attachments   []Attachment `json:"attachments,omitempty"`
 }
 
 // DisplayKey returns the human-readable ticket key like "AUTH-1"
@@ -82,6 +83,15 @@ type Subtask struct {
 	Title     string `json:"title"`
 	Completed bool   `json:"completed"`
 	Position  int    `json:"position"`
+}
+
+type Attachment struct {
+	ID          string    `json:"id"`
+	TicketID    string    `json:"ticketId"`
+	Filename    string    `json:"filename"`
+	ContentType string    `json:"contentType"`
+	Size        int       `json:"size"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type TicketDependency struct {

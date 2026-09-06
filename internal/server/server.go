@@ -1,12 +1,15 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 
 	"github.com/creack/pty"
@@ -76,6 +79,12 @@ func (s *Server) setupRoutes(webFS fs.FS) {
 			r.Post("/{id}/move", s.moveTicket)
 			r.Delete("/{id}", s.deleteTicket)
 			r.Post("/{id}/subtasks", s.addSubtask)
+			r.Post("/{id}/attachments", s.uploadAttachment)
+		})
+
+		r.Route("/attachments", func(r chi.Router) {
+			r.Get("/{id}", s.getAttachment)
+			r.Delete("/{id}", s.deleteAttachment)
 		})
 
 		r.Route("/subtasks", func(r chi.Router) {
@@ -400,6 +409,102 @@ func (s *Server) toggleSubtask(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) deleteSubtask(w http.ResponseWriter, r *http.Request) {
 	if err := s.store.DeleteSubtask(chi.URLParam(r, "id")); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	s.events.broadcast(EventTicketsUpdated, nil)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+const maxAttachmentBytes = 8 << 20
+
+var allowedAttachmentTypes = map[string]bool{
+	"image/png":  true,
+	"image/jpeg": true,
+	"image/webp": true,
+	"image/gif":  true,
+}
+
+func (s *Server) uploadAttachment(w http.ResponseWriter, r *http.Request) {
+	ticketID := chi.URLParam(r, "id")
+	t, err := s.store.GetTicket(ticketID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if t == nil {
+		writeError(w, http.StatusNotFound, "ticket not found")
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, maxAttachmentBytes)
+	if err := r.ParseMultipartForm(maxAttachmentBytes); err != nil {
+		if strings.Contains(err.Error(), "request body too large") {
+			writeError(w, http.StatusRequestEntityTooLarge, "file too large (max 8MB)")
+			return
+		}
+		writeError(w, http.StatusBadRequest, "invalid multipart form")
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "file is required")
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		if strings.Contains(err.Error(), "request body too large") {
+			writeError(w, http.StatusRequestEntityTooLarge, "file too large (max 8MB)")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if len(data) > maxAttachmentBytes {
+		writeError(w, http.StatusRequestEntityTooLarge, "file too large (max 8MB)")
+		return
+	}
+	if len(data) == 0 {
+		writeError(w, http.StatusBadRequest, "file is empty")
+		return
+	}
+
+	sniffLen := min(len(data), 512)
+	contentType := http.DetectContentType(data[:sniffLen])
+	if !allowedAttachmentTypes[contentType] {
+		writeError(w, http.StatusUnsupportedMediaType, "only png, jpeg, webp, and gif images are allowed")
+		return
+	}
+
+	a, err := s.store.CreateAttachment(ticketID, header.Filename, contentType, data)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	s.events.broadcast(EventTicketsUpdated, nil)
+	writeJSON(w, http.StatusCreated, a)
+}
+
+func (s *Server) getAttachment(w http.ResponseWriter, r *http.Request) {
+	data, contentType, err := s.store.AttachmentData(chi.URLParam(r, "id"))
+	if err == sql.ErrNoRows {
+		writeError(w, http.StatusNotFound, "attachment not found")
+		return
+	}
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", "inline")
+	w.Write(data)
+}
+
+func (s *Server) deleteAttachment(w http.ResponseWriter, r *http.Request) {
+	if err := s.store.DeleteAttachment(chi.URLParam(r, "id")); err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

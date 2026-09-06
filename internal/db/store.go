@@ -20,6 +20,7 @@ func NewStore(database *sql.DB) *Store {
 
 func (s *Store) ClearData() error {
 	tables := []string{
+		"attachments",
 		"ticket_dependencies",
 		"ticket_labels",
 		"subtasks",
@@ -267,6 +268,7 @@ func (s *Store) ListTickets(filter models.TicketFilter) ([]models.Ticket, error)
 		tickets[i].Labels, _ = s.getTicketLabels(tickets[i].ID)
 		tickets[i].Subtasks, _ = s.getTicketSubtasks(tickets[i].ID)
 		tickets[i].BlockedBy, _ = s.getTicketBlockedBy(tickets[i].ID)
+		tickets[i].Attachments, _ = s.AttachmentsByTicketID(tickets[i].ID)
 	}
 
 	return tickets, nil
@@ -292,6 +294,7 @@ func (s *Store) GetTicket(id string) (*models.Ticket, error) {
 	t.Labels, _ = s.getTicketLabels(t.ID)
 	t.Subtasks, _ = s.getTicketSubtasks(t.ID)
 	t.BlockedBy, _ = s.getTicketBlockedBy(t.ID)
+	t.Attachments, _ = s.AttachmentsByTicketID(t.ID)
 
 	return &t, nil
 }
@@ -538,6 +541,57 @@ func (s *Store) ToggleSubtask(id string) (*models.Subtask, error) {
 
 func (s *Store) DeleteSubtask(id string) error {
 	_, err := s.db.Exec("DELETE FROM subtasks WHERE id = ?", id)
+	return err
+}
+
+func (s *Store) CreateAttachment(ticketID, filename, contentType string, data []byte) (*models.Attachment, error) {
+	a := models.Attachment{
+		ID:          newID(),
+		TicketID:    ticketID,
+		Filename:    filename,
+		ContentType: contentType,
+		Size:        len(data),
+		CreatedAt:   time.Now(),
+	}
+	_, err := s.db.Exec(
+		"INSERT INTO attachments (id, ticket_id, filename, content_type, size, data, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		a.ID, a.TicketID, a.Filename, a.ContentType, a.Size, data, a.CreatedAt,
+	)
+	return &a, err
+}
+
+func (s *Store) AttachmentsByTicketID(ticketID string) ([]models.Attachment, error) {
+	rows, err := s.db.Query(
+		"SELECT id, ticket_id, filename, content_type, size, created_at FROM attachments WHERE ticket_id = ? ORDER BY created_at",
+		ticketID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var attachments []models.Attachment
+	for rows.Next() {
+		var a models.Attachment
+		if err := rows.Scan(&a.ID, &a.TicketID, &a.Filename, &a.ContentType, &a.Size, &a.CreatedAt); err != nil {
+			return nil, err
+		}
+		attachments = append(attachments, a)
+	}
+	return attachments, rows.Err()
+}
+
+func (s *Store) AttachmentData(id string) ([]byte, string, error) {
+	var data []byte
+	var contentType string
+	err := s.db.QueryRow("SELECT data, content_type FROM attachments WHERE id = ?", id).Scan(&data, &contentType)
+	if err != nil {
+		return nil, "", err
+	}
+	return data, contentType, nil
+}
+
+func (s *Store) DeleteAttachment(id string) error {
+	_, err := s.db.Exec("DELETE FROM attachments WHERE id = ?", id)
 	return err
 }
 
