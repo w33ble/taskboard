@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   DndContext,
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import LabelBadge from "../components/LabelBadge";
 import { api, type Ticket, type Project, type Team, type BoardColumn, type TicketUpdateData, type TicketCreateData } from "../api/client";
+import { useBoardEvents, type BoardEventType } from "../hooks/useBoardEvents";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
 
@@ -255,6 +256,9 @@ export default function Board() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [createForStatus, setCreateForStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const activeTicketRef = useRef<Ticket | null>(null);
+  activeTicketRef.current = activeTicket;
+  const dirtyRef = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -273,14 +277,35 @@ export default function Board() {
   }, [selectedProject]);
 
   useEffect(() => {
+    setLoading(true);
+    loadBoard();
+  }, [loadBoard]);
+
+  const loadProjectsAndTeams = useCallback(() => {
     api.projects.list().then(setProjects).catch(() => setProjects([]));
     api.teams.list().then(setTeams).catch(() => setTeams([]));
   }, []);
 
   useEffect(() => {
-    setLoading(true);
-    loadBoard();
-  }, [loadBoard]);
+    loadProjectsAndTeams();
+  }, [loadProjectsAndTeams]);
+
+  const handleBoardEvent = useCallback(
+    (type: BoardEventType) => {
+      if (type === "connected") return;
+      if (activeTicketRef.current !== null) {
+        dirtyRef.current = true;
+        return;
+      }
+      if (type === "projects.updated") {
+        loadProjectsAndTeams();
+      }
+      loadBoard();
+    },
+    [loadBoard, loadProjectsAndTeams]
+  );
+
+  useBoardEvents(handleBoardEvent);
 
   const getColumnTickets = (status: string) =>
     columns.find((c) => c.status === status)?.tickets || [];
@@ -335,17 +360,32 @@ export default function Board() {
     const { active, over } = event;
     setActiveTicket(null);
 
-    if (!over) return;
+    if (!over) {
+      if (dirtyRef.current) {
+        dirtyRef.current = false;
+        loadBoard();
+      }
+      return;
+    }
 
     const targetStatus = STATUSES.includes(over.id as string)
       ? (over.id as string)
       : findColumnByTicketId(over.id);
 
-    if (!targetStatus) return;
+    if (!targetStatus) {
+      if (dirtyRef.current) {
+        dirtyRef.current = false;
+        loadBoard();
+      }
+      return;
+    }
 
     try {
       await api.tickets.move(active.id as string, targetStatus);
+      dirtyRef.current = false;
+      loadBoard();
     } catch {
+      dirtyRef.current = false;
       loadBoard();
     }
   };
