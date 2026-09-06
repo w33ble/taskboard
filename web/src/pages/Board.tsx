@@ -112,6 +112,13 @@ function TicketCard({
         <PriorityBadge priority={ticket.priority} />
       </div>
       <p className="text-sm text-slate-200 leading-snug">{ticket.title}</p>
+      {ticket.attachments && ticket.attachments.length > 0 && (
+        <img
+          src={`/api/attachments/${ticket.attachments[0].id}`}
+          alt={ticket.attachments[0].filename}
+          className="w-full h-24 object-cover rounded-md border border-slate-800"
+        />
+      )}
       {(project || team) && (
         <div className="flex flex-wrap items-center gap-1.5">
           {project && (

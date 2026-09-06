@@ -31,6 +31,15 @@ export interface Subtask {
   position: number;
 }
 
+export interface Attachment {
+  id: string;
+  ticketId: string;
+  filename: string;
+  contentType: string;
+  size: number;
+  createdAt: string;
+}
+
 export interface Ticket {
   id: string;
   projectId: string;
@@ -48,6 +57,7 @@ export interface Ticket {
   labels: Label[];
   subtasks: Subtask[];
   blockedBy: string[];
+  attachments?: Attachment[];
 }
 
 export type TicketCreateData = Partial<Omit<Ticket, 'labels' | 'subtasks' | 'blockedBy'>> & {
@@ -150,6 +160,24 @@ export const api = {
       request<Subtask>(`/api/subtasks/${id}/toggle`, { method: "POST" }),
     delete: (id: string) =>
       request<void>(`/api/subtasks/${id}`, { method: "DELETE" }),
+  },
+
+  attachments: {
+    upload: async (ticketId: string, file: File): Promise<Attachment> => {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`/api/tickets/${ticketId}/attachments`, {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`API error ${res.status}: ${text}`);
+      }
+      return res.json();
+    },
+    delete: (id: string) =>
+      request<void>(`/api/attachments/${id}`, { method: "DELETE" }),
   },
 
   labels: {

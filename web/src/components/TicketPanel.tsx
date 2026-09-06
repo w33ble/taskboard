@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Trash2, CheckCircle2, Circle, Pencil, Eye } from "lucide-react";
 import Markdown from "react-markdown";
-import { api, type Ticket, type Project, type Team, type Subtask, type TicketUpdateData } from "../api/client";
+import { api, type Ticket, type Project, type Team, type Subtask, type Attachment, type TicketUpdateData } from "../api/client";
 import LabelPicker from "./LabelPicker";
 
 const STATUSES = ["todo", "in_progress", "done"];
@@ -36,6 +36,8 @@ export default function TicketPanel({
   const [teamId, setTeamId] = useState(ticket.teamId || "");
   const [subtasks, setSubtasks] = useState<Subtask[]>(ticket.subtasks || []);
   const [newSubtask, setNewSubtask] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>(ticket.attachments || []);
+  const [attachmentError, setAttachmentError] = useState("");
   const [labelIds, setLabelIds] = useState<string[]>(ticket.labels?.map(l => l.id) || []);
   const [dirty, setDirty] = useState(false);
   const [descMode, setDescMode] = useState<"preview" | "write">(description ? "preview" : "write");
@@ -71,6 +73,29 @@ export default function TicketPanel({
   const handleDeleteSubtask = async (id: string) => {
     await api.subtasks.delete(id);
     setSubtasks((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setAttachmentError("");
+    try {
+      const uploaded = await api.attachments.upload(ticket.id, file);
+      setAttachments((prev) => [...prev, uploaded]);
+    } catch (err) {
+      setAttachmentError(err instanceof Error ? err.message : "Upload failed");
+    }
+  };
+
+  const handleDeleteAttachment = async (id: string) => {
+    setAttachmentError("");
+    try {
+      await api.attachments.delete(id);
+      setAttachments((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      setAttachmentError(err instanceof Error ? err.message : "Delete failed");
+    }
   };
 
   return (
@@ -319,6 +344,50 @@ export default function TicketPanel({
                 Add
               </button>
             </form>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-3">
+              Attachments
+            </h4>
+            {attachments.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {attachments.map((a) => (
+                  <div
+                    key={a.id}
+                    className="group relative rounded-lg overflow-hidden border border-slate-700/50 bg-slate-800/50"
+                  >
+                    <img
+                      src={`/api/attachments/${a.id}`}
+                      alt={a.filename}
+                      className="w-full h-24 object-cover"
+                    />
+                    <button
+                      onClick={() => handleDeleteAttachment(a.id)}
+                      className="absolute top-1 right-1 p-1 rounded-md bg-black/60 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-red-400 transition-all"
+                      title={a.filename}
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="px-1.5 py-1 text-[11px] text-slate-500 truncate">
+                      {a.filename}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className="inline-block px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors cursor-pointer">
+              Add image…
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUploadAttachment}
+                className="hidden"
+              />
+            </label>
+            {attachmentError && (
+              <div className="mt-2 text-xs text-red-400">{attachmentError}</div>
+            )}
           </div>
         </div>
       </div>
