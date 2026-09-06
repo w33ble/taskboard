@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   DndContext,
   DragOverlay,
@@ -244,7 +245,11 @@ function Column({
 export default function Board() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedProject = searchParams.get("project") ?? "";
+  const setSelectedProject = (id: string) => {
+    setSearchParams(id ? { project: id } : {});
+  };
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
