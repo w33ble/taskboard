@@ -109,7 +109,7 @@ export default function TerminalPanel({
     xtermRef.current?.dispose();
     xtermRef.current = null;
     fitRef.current = null;
-    setConnected(false);
+    // connected is reset by ws.onclose when the socket closes
   }, []);
 
   useEffect(() => {

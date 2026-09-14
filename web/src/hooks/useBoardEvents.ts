@@ -17,7 +17,10 @@ const EVENT_TYPES: BoardEventType[] = [
 
 export function useBoardEvents(onEvent: (type: BoardEventType) => void): void {
   const cbRef = useRef(onEvent);
-  cbRef.current = onEvent;
+
+  useEffect(() => {
+    cbRef.current = onEvent;
+  }, [onEvent]);
 
   useEffect(() => {
     const es = new EventSource("/api/events");
