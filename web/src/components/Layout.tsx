@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -9,6 +9,7 @@ import {
   Zap,
   TerminalSquare,
 } from "lucide-react";
+import { readLastBoardProject } from "../lib/lastBoard";
 
 const TerminalPanel = lazy(() => import("./TerminalPanel"));
 
@@ -22,6 +23,18 @@ const navItems = [
 
 export default function Layout() {
   const [terminalOpen, setTerminalOpen] = useState(false);
+  const location = useLocation();
+
+  // The board link carries the board the user was last on, so navigating away
+  // and back does not fall back to "All boards". While the board is open the
+  // URL wins, which keeps the link honest right after picking a board; on any
+  // other view the remembered value is the only source available.
+  const activeProject =
+    new URLSearchParams(location.search).get("project") ??
+    readLastBoardProject();
+  const boardTarget = activeProject
+    ? { pathname: "/", search: `?project=${encodeURIComponent(activeProject)}` }
+    : "/";
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -37,7 +50,7 @@ export default function Layout() {
           {navItems.map((item) => (
             <NavLink
               key={item.to}
-              to={item.to}
+              to={item.to === "/" ? boardTarget : item.to}
               end={item.to === "/"}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${
