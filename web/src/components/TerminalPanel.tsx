@@ -70,6 +70,7 @@ export default function TerminalPanel({
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 
+    // oxlint-disable-next-line unicorn/prefer-add-event-listener -- one socket, one handler per event; addEventListener would add nothing
     ws.onopen = () => {
       setConnected(true);
       ws.send(
@@ -77,12 +78,14 @@ export default function TerminalPanel({
       );
     };
 
+    // oxlint-disable-next-line unicorn/prefer-add-event-listener -- one socket, one handler per event; addEventListener would add nothing
     ws.onmessage = (e) => {
       if (e.data instanceof ArrayBuffer) {
         term.write(new Uint8Array(e.data));
       }
     };
 
+    // oxlint-disable-next-line unicorn/prefer-add-event-listener -- one socket, one handler per event; addEventListener would add nothing
     ws.onclose = () => {
       setConnected(false);
       term.write(
@@ -128,6 +131,7 @@ export default function TerminalPanel({
 
   useEffect(() => {
     fitRef.current?.fit();
+    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- fit() is an imperative DOM sync; height/isOpen intentionally retrigger it without being read
   }, [height, isOpen]);
 
   const handleDragStart = (e: React.MouseEvent) => {

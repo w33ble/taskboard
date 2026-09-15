@@ -298,6 +298,7 @@ export default function Board() {
           setColumns(STATUSES.map((status) => ({ status, tickets: [] })))
         )
         .finally(() => setLoading(false)),
+    // oxlint-disable-next-line react/memo-dependencies -- selectedProject is the only reactive read; api/STATUSES are module-scope and setters are stable
     [selectedProject]
   );
 
