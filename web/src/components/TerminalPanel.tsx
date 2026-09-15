@@ -16,12 +16,14 @@ export default function TerminalPanel({
   const xtermRef = useRef<XTerm | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
   const [connected, setConnected] = useState(false);
 
   const [height, setHeight] = useState(400);
   const dragging = useRef(false);
   const startY = useRef(0);
   const startH = useRef(0);
+  const endDragRef = useRef<(() => void) | null>(null);
 
   const connect = useCallback(() => {
     if (!termRef.current || xtermRef.current) return;
@@ -63,6 +65,10 @@ export default function TerminalPanel({
     xtermRef.current = term;
     fitRef.current = fit;
 
+    const observer = new ResizeObserver(() => fit.fit());
+    observer.observe(termRef.current);
+    observerRef.current = observer;
+
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const ws = new WebSocket(
       `${proto}//${window.location.host}/api/terminal/ws`
@@ -88,9 +94,11 @@ export default function TerminalPanel({
     // oxlint-disable-next-line unicorn/prefer-add-event-listener -- one socket, one handler per event; addEventListener would add nothing
     ws.onclose = () => {
       setConnected(false);
-      term.write(
-        "\r\n\x1b[90m[session ended — reopen terminal to reconnect]\x1b[0m\r\n"
-      );
+      if (xtermRef.current === term) {
+        term.write(
+          "\r\n\x1b[90m[session ended — reopen terminal to reconnect]\x1b[0m\r\n"
+        );
+      }
     };
 
     term.onData((data) => {
@@ -107,32 +115,28 @@ export default function TerminalPanel({
   }, []);
 
   const disconnect = useCallback(() => {
-    wsRef.current?.close();
-    wsRef.current = null;
-    xtermRef.current?.dispose();
+    observerRef.current?.disconnect();
+    observerRef.current = null;
+    const term = xtermRef.current;
     xtermRef.current = null;
     fitRef.current = null;
-    // connected is reset by ws.onclose when the socket closes
+    term?.dispose();
+    // close last: the refs are already cleared, so ws.onclose cannot write to a
+    // disposed terminal. connected is still reset by ws.onclose.
+    wsRef.current?.close();
+    wsRef.current = null;
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      requestAnimationFrame(() => connect());
-    } else {
+    if (!isOpen) return;
+    const raf = requestAnimationFrame(() => connect());
+    return () => {
+      cancelAnimationFrame(raf);
       disconnect();
-    }
+    };
   }, [isOpen, connect, disconnect]);
 
-  useEffect(() => {
-    const handleResize = () => fitRef.current?.fit();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    fitRef.current?.fit();
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- fit() is an imperative DOM sync; height/isOpen intentionally retrigger it without being read
-  }, [height, isOpen]);
+  useEffect(() => () => endDragRef.current?.(), []);
 
   const handleDragStart = (e: React.MouseEvent) => {
     dragging.current = true;
@@ -151,10 +155,15 @@ export default function TerminalPanel({
     };
 
     const onUp = () => {
+      endDragRef.current?.();
+      fitRef.current?.fit();
+    };
+
+    endDragRef.current = () => {
       dragging.current = false;
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
-      fitRef.current?.fit();
+      endDragRef.current = null;
     };
 
     document.addEventListener("mousemove", onMove);
