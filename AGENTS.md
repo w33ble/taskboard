@@ -35,7 +35,7 @@ npm run fmt:check   # oxfmt --check (CI gate)
 
 Run `npm run fmt` before committing. CI runs both `npm run lint` and `npm run fmt:check`.
 
-Note: dropping `typescript-eslint` also removed the peer-dependency blocker that previously prevented upgrading `web/` to TypeScript 7.
+Note: `web/` runs TypeScript 7 — the native compiler, still invoked as `tsc`. Dropping `typescript-eslint` removed the peer-dependency blocker that previously prevented the upgrade. TypeScript is only used via the `tsc` binary; no code imports its programmatic API, which is still unstable in 7.0.
 
 ## Common commands
 
