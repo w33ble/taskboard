@@ -284,20 +284,30 @@ export default function Board() {
     activeTicketRef.current = activeTicket;
   }, [activeTicket]);
   const dirtyRef = useRef(false);
+  const boardRequestId = useRef(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
   const loadBoard = useCallback(
-    () =>
-      api.board
+    () => {
+      const requestId = ++boardRequestId.current;
+      return api.board
         .get(selectedProject || undefined)
-        .then((board) => setColumns(board.columns || []))
-        .catch(() =>
-          setColumns(STATUSES.map((status) => ({ status, tickets: [] })))
-        )
-        .finally(() => setLoading(false)),
+        .then((board) => {
+          if (requestId !== boardRequestId.current) return;
+          setColumns(board.columns || []);
+        })
+        .catch(() => {
+          if (requestId !== boardRequestId.current) return;
+          setColumns(STATUSES.map((status) => ({ status, tickets: [] })));
+        })
+        .finally(() => {
+          if (requestId !== boardRequestId.current) return;
+          setLoading(false);
+        });
+    },
     // oxlint-disable-next-line react/memo-dependencies -- selectedProject is the only reactive read; api/STATUSES are module-scope and setters are stable
     [selectedProject]
   );
