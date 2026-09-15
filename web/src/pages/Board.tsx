@@ -38,6 +38,7 @@ import {
 import { useBoardEvents, type BoardEventType } from "../hooks/useBoardEvents";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
+import { writeLastBoardProject } from "../lib/lastBoard";
 
 const STATUSES = ["todo", "in_progress", "done"];
 const STATUS_LABELS: Record<string, string> = {
@@ -283,6 +284,10 @@ export default function Board() {
   useEffect(() => {
     activeTicketRef.current = activeTicket;
   }, [activeTicket]);
+
+  useEffect(() => {
+    writeLastBoardProject(selectedProject);
+  }, [selectedProject]);
   const dirtyRef = useRef(false);
   const boardRequestId = useRef(0);
 
