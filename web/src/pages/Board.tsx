@@ -272,6 +272,9 @@ export default function Board() {
   const selectedProject = searchParams.get("project") ?? "";
   const setSelectedProject = (id: string) => {
     if (id !== selectedProject) setLoading(true);
+    // Written synchronously so the nav link cannot read a stale value in the
+    // same commit that clears the selection ("All boards").
+    writeLastBoardProject(id);
     setSearchParams(id ? { project: id } : {});
   };
   const [columns, setColumns] = useState<BoardColumn[]>([]);
@@ -286,7 +289,10 @@ export default function Board() {
   }, [activeTicket]);
 
   useEffect(() => {
-    writeLastBoardProject(selectedProject);
+    // Only ever records a board. Clearing is an explicit act ("All boards") and
+    // happens synchronously in setSelectedProject, so landing on a bare "/"
+    // does not forget the board the user was on.
+    if (selectedProject) writeLastBoardProject(selectedProject);
   }, [selectedProject]);
   const dirtyRef = useRef(false);
   const boardRequestId = useRef(0);
