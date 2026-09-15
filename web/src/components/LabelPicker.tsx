@@ -18,7 +18,10 @@ export default function LabelPicker({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    api.labels.list().then(setLabels).finally(() => setLoading(false));
+    api.labels
+      .list()
+      .then(setLabels)
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -40,9 +43,7 @@ export default function LabelPicker({
     );
   };
 
-  const selectedLabels = labels.filter((l) =>
-    selectedLabelIds.includes(l.id)
-  );
+  const selectedLabels = labels.filter((l) => selectedLabelIds.includes(l.id));
 
   if (loading) {
     return <span className="text-sm text-slate-400">Loading labels...</span>;

@@ -24,13 +24,12 @@ export function useBoardEvents(onEvent: (type: BoardEventType) => void): void {
 
   useEffect(() => {
     const es = new EventSource("/api/events");
-    const listeners: Array<{ type: BoardEventType; fn: () => void }> = EVENT_TYPES.map(
-      (type) => {
+    const listeners: Array<{ type: BoardEventType; fn: () => void }> =
+      EVENT_TYPES.map((type) => {
         const fn = () => cbRef.current(type);
         es.addEventListener(type, fn);
         return { type, fn };
-      }
-    );
+      });
     return () => {
       for (const { type, fn } of listeners) {
         es.removeEventListener(type, fn);

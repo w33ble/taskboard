@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { X, Trash2, CheckCircle2, Circle, Pencil, Eye } from "lucide-react";
 import Markdown from "react-markdown";
-import { api, type Ticket, type Project, type Team, type Subtask, type Attachment, type TicketUpdateData } from "../api/client";
+import {
+  api,
+  type Ticket,
+  type Project,
+  type Team,
+  type Subtask,
+  type Attachment,
+  type TicketUpdateData,
+} from "../api/client";
 import LabelPicker from "./LabelPicker";
 
 const STATUSES = ["todo", "in_progress", "done"];
@@ -36,11 +44,17 @@ export default function TicketPanel({
   const [teamId, setTeamId] = useState(ticket.teamId || "");
   const [subtasks, setSubtasks] = useState<Subtask[]>(ticket.subtasks || []);
   const [newSubtask, setNewSubtask] = useState("");
-  const [attachments, setAttachments] = useState<Attachment[]>(ticket.attachments || []);
+  const [attachments, setAttachments] = useState<Attachment[]>(
+    ticket.attachments || []
+  );
   const [attachmentError, setAttachmentError] = useState("");
-  const [labelIds, setLabelIds] = useState<string[]>(ticket.labels?.map(l => l.id) || []);
+  const [labelIds, setLabelIds] = useState<string[]>(
+    ticket.labels?.map((l) => l.id) || []
+  );
   const [dirty, setDirty] = useState(false);
-  const [descMode, setDescMode] = useState<"preview" | "write">(description ? "preview" : "write");
+  const [descMode, setDescMode] = useState<"preview" | "write">(
+    description ? "preview" : "write"
+  );
 
   const markDirty = () => setDirty(true);
 
@@ -75,7 +89,9 @@ export default function TicketPanel({
     setSubtasks((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadAttachment = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;

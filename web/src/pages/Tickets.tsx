@@ -10,7 +10,14 @@ import {
   Ticket as TicketIcon,
 } from "lucide-react";
 import LabelBadge from "../components/LabelBadge";
-import { api, type Ticket, type Project, type Team, type TicketUpdateData, type TicketCreateData } from "../api/client";
+import {
+  api,
+  type Ticket,
+  type Project,
+  type Team,
+  type TicketUpdateData,
+  type TicketCreateData,
+} from "../api/client";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
 
@@ -29,12 +36,13 @@ const STATUS_LABELS: Record<string, string> = {
   done: "Done",
 };
 
-const PRIORITY_CONFIG: Record<string, { style: string; icon: typeof ArrowUp }> = {
-  urgent: { style: "bg-red-500/20 text-red-400", icon: AlertTriangle },
-  high: { style: "bg-orange-500/20 text-orange-400", icon: ArrowUp },
-  medium: { style: "bg-yellow-500/20 text-yellow-400", icon: ArrowRight },
-  low: { style: "bg-green-500/20 text-green-400", icon: ArrowDown },
-};
+const PRIORITY_CONFIG: Record<string, { style: string; icon: typeof ArrowUp }> =
+  {
+    urgent: { style: "bg-red-500/20 text-red-400", icon: AlertTriangle },
+    high: { style: "bg-orange-500/20 text-orange-400", icon: ArrowUp },
+    medium: { style: "bg-yellow-500/20 text-yellow-400", icon: ArrowRight },
+    low: { style: "bg-green-500/20 text-green-400", icon: ArrowDown },
+  };
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -221,13 +229,13 @@ export default function Tickets() {
                   </td>
                   <td className="px-6 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {ticket.labels && ticket.labels.length > 0
-                        ? ticket.labels.map((label) => (
-                            <LabelBadge key={label.id} label={label} />
-                          ))
-                        : (
-                          <span className="text-xs text-slate-700">—</span>
-                        )}
+                      {ticket.labels && ticket.labels.length > 0 ? (
+                        ticket.labels.map((label) => (
+                          <LabelBadge key={label.id} label={label} />
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-700">—</span>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-3">

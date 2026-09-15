@@ -154,10 +154,7 @@ export default function CreateTicketModal({
             <label className="block text-xs font-medium text-slate-400 mb-1.5">
               Labels
             </label>
-            <LabelPicker
-              selectedLabelIds={labelIds}
-              onChange={setLabelIds}
-            />
+            <LabelPicker selectedLabelIds={labelIds} onChange={setLabelIds} />
           </div>
         </div>
 

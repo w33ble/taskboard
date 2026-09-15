@@ -105,7 +105,10 @@ export default function Labels() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this label? It will be removed from all tickets.")) return;
+    if (
+      !window.confirm("Delete this label? It will be removed from all tickets.")
+    )
+      return;
     await api.labels.delete(id);
     setLabels((prev) => prev.filter((l) => l.id !== id));
   };

@@ -13,11 +13,46 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<Suspense fallback={null}><Board /></Suspense>} />
-          <Route path="projects" element={<Suspense fallback={null}><Projects /></Suspense>} />
-          <Route path="teams" element={<Suspense fallback={null}><Teams /></Suspense>} />
-          <Route path="tickets" element={<Suspense fallback={null}><Tickets /></Suspense>} />
-          <Route path="labels" element={<Suspense fallback={null}><Labels /></Suspense>} />
+          <Route
+            index
+            element={
+              <Suspense fallback={null}>
+                <Board />
+              </Suspense>
+            }
+          />
+          <Route
+            path="projects"
+            element={
+              <Suspense fallback={null}>
+                <Projects />
+              </Suspense>
+            }
+          />
+          <Route
+            path="teams"
+            element={
+              <Suspense fallback={null}>
+                <Teams />
+              </Suspense>
+            }
+          />
+          <Route
+            path="tickets"
+            element={
+              <Suspense fallback={null}>
+                <Tickets />
+              </Suspense>
+            }
+          />
+          <Route
+            path="labels"
+            element={
+              <Suspense fallback={null}>
+                <Labels />
+              </Suspense>
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

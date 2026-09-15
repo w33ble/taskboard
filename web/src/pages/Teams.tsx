@@ -210,10 +210,7 @@ export default function Teams() {
       </div>
 
       {showCreate && (
-        <TeamModal
-          onClose={() => setShowCreate(false)}
-          onSave={handleCreate}
-        />
+        <TeamModal onClose={() => setShowCreate(false)} onSave={handleCreate} />
       )}
 
       {editTeam && (
