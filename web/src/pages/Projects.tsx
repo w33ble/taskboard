@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2, X, FolderKanban, ChevronDown, ChevronUp } from "lucide-react";
 import Markdown from "react-markdown";
 import { api, type Project } from "../api/client";
@@ -183,19 +183,19 @@ export default function Projects() {
     });
   };
 
-  const load = async () => {
-    try {
-      const data = await api.projects.list();
-      setProjects(data || []);
-    } catch {
-      setProjects([]);
-    }
-    setLoading(false);
-  };
+  const load = useCallback(
+    () =>
+      api.projects
+        .list()
+        .then((data) => setProjects(data || []))
+        .catch(() => setProjects([]))
+        .finally(() => setLoading(false)),
+    []
+  );
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+  }, [load]);
 
   const handleCreate = async (data: Partial<Project>) => {
     await api.projects.create(data);

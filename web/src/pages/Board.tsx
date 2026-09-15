@@ -256,6 +256,7 @@ export default function Board() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedProject = searchParams.get("project") ?? "";
   const setSelectedProject = (id: string) => {
+    if (id !== selectedProject) setLoading(true);
     setSearchParams(id ? { project: id } : {});
   };
   const [columns, setColumns] = useState<BoardColumn[]>([]);
@@ -264,28 +265,30 @@ export default function Board() {
   const [createForStatus, setCreateForStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const activeTicketRef = useRef<Ticket | null>(null);
-  activeTicketRef.current = activeTicket;
+
+  useEffect(() => {
+    activeTicketRef.current = activeTicket;
+  }, [activeTicket]);
   const dirtyRef = useRef(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   );
 
-  const loadBoard = useCallback(async () => {
-    try {
-      const board = await api.board.get(selectedProject || undefined);
-      setColumns(board.columns || []);
-    } catch {
-      setColumns(
-        STATUSES.map((status) => ({ status, tickets: [] }))
-      );
-    }
-    setLoading(false);
-  }, [selectedProject]);
+  const loadBoard = useCallback(
+    () =>
+      api.board
+        .get(selectedProject || undefined)
+        .then((board) => setColumns(board.columns || []))
+        .catch(() =>
+          setColumns(STATUSES.map((status) => ({ status, tickets: [] })))
+        )
+        .finally(() => setLoading(false)),
+    [selectedProject]
+  );
 
   useEffect(() => {
-    setLoading(true);
-    loadBoard();
+    void loadBoard();
   }, [loadBoard]);
 
   const loadProjectsAndTeams = useCallback(() => {

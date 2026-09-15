@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2, X, Users } from "lucide-react";
 import { api, type Team } from "../api/client";
 
@@ -113,19 +113,19 @@ export default function Teams() {
   const [editTeam, setEditTeam] = useState<Team | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
-    try {
-      const data = await api.teams.list();
-      setTeams(data || []);
-    } catch {
-      setTeams([]);
-    }
-    setLoading(false);
-  };
+  const load = useCallback(
+    () =>
+      api.teams
+        .list()
+        .then((data) => setTeams(data || []))
+        .catch(() => setTeams([]))
+        .finally(() => setLoading(false)),
+    []
+  );
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+  }, [load]);
 
   const handleCreate = async (data: Partial<Team>) => {
     await api.teams.create(data);

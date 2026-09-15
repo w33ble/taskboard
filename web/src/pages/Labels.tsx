@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pencil, Trash2, Plus, Tag } from "lucide-react";
 import { api, type Label } from "../api/client";
 
@@ -61,19 +61,19 @@ export default function Labels() {
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
 
-  const load = async () => {
-    try {
-      const data = await api.labels.list();
-      setLabels(data || []);
-    } catch {
-      setLabels([]);
-    }
-    setLoading(false);
-  };
+  const load = useCallback(
+    () =>
+      api.labels
+        .list()
+        .then((data) => setLabels(data || []))
+        .catch(() => setLabels([]))
+        .finally(() => setLoading(false)),
+    []
+  );
 
   useEffect(() => {
-    load();
-  }, []);
+    void load();
+  }, [load]);
 
   const handleCreate = async () => {
     if (!createName.trim() || !createColor) return;
