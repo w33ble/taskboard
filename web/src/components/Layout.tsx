@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -9,32 +9,36 @@ import {
   Zap,
   TerminalSquare,
 } from "lucide-react";
-import { readLastBoardProject } from "../lib/lastBoard";
+import { useSelectedProject } from "../hooks/useSelectedProject";
 
 const TerminalPanel = lazy(() => import("./TerminalPanel"));
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Board" },
-  { to: "/projects", icon: FolderKanban, label: "Projects" },
-  { to: "/teams", icon: Users, label: "Teams" },
-  { to: "/tickets", icon: Ticket, label: "Tickets" },
-  { to: "/labels", icon: Tag, label: "Labels" },
+  { to: "/", icon: LayoutDashboard, label: "Board", sharesProject: true },
+  {
+    to: "/projects",
+    icon: FolderKanban,
+    label: "Projects",
+    sharesProject: false,
+  },
+  { to: "/teams", icon: Users, label: "Teams", sharesProject: false },
+  { to: "/tickets", icon: Ticket, label: "Tickets", sharesProject: true },
+  { to: "/labels", icon: Tag, label: "Labels", sharesProject: false },
 ];
 
 export default function Layout() {
   const [terminalOpen, setTerminalOpen] = useState(false);
-  const location = useLocation();
+  const { selectedProject, rememberedProject } = useSelectedProject();
 
-  // The board link carries the board the user was last on, so navigating away
-  // and back does not fall back to "All boards". While the board is open the
-  // URL wins, which keeps the link honest right after picking a board; on any
-  // other view the remembered value is the only source available.
-  const activeProject =
-    new URLSearchParams(location.search).get("project") ??
-    readLastBoardProject();
-  const boardTarget = activeProject
-    ? { pathname: "/", search: `?project=${encodeURIComponent(activeProject)}` }
-    : "/";
+  // Board and Tickets share one selected project. Both nav links carry it, so
+  // navigating away and back does not fall back to "All projects". While a view
+  // is mounted the URL wins; on the other routes the remembered value is the
+  // only source available.
+  const activeProject = selectedProject || rememberedProject;
+  const withProject = (pathname: string) =>
+    activeProject
+      ? { pathname, search: `?project=${encodeURIComponent(activeProject)}` }
+      : pathname;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -50,7 +54,7 @@ export default function Layout() {
           {navItems.map((item) => (
             <NavLink
               key={item.to}
-              to={item.to === "/" ? boardTarget : item.to}
+              to={item.sharesProject ? withProject(item.to) : item.to}
               end={item.to === "/"}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors ${

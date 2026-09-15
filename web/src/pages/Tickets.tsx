@@ -20,6 +20,7 @@ import {
 } from "../api/client";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
+import { useSelectedProject } from "../hooks/useSelectedProject";
 
 const STATUSES = ["todo", "in_progress", "done"];
 const PRIORITIES = ["urgent", "high", "medium", "low"];
@@ -78,7 +79,7 @@ export default function Tickets() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
 
-  const [filterProject, setFilterProject] = useState("");
+  const { selectedProject, selectProject } = useSelectedProject();
   const [filterStatus, setFilterStatus] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
 
@@ -104,7 +105,7 @@ export default function Tickets() {
   }, [load]);
 
   const filtered = tickets.filter((t) => {
-    if (filterProject && t.projectId !== filterProject) return false;
+    if (selectedProject && t.projectId !== selectedProject) return false;
     if (filterStatus && t.status !== filterStatus) return false;
     if (filterPriority && t.priority !== filterPriority) return false;
     return true;
@@ -141,8 +142,8 @@ export default function Tickets() {
 
       <div className="shrink-0 flex items-center gap-3 px-6 py-3 border-b border-slate-800/50">
         <select
-          value={filterProject}
-          onChange={(e) => setFilterProject(e.target.value)}
+          value={selectedProject}
+          onChange={(e) => selectProject(e.target.value)}
           className="bg-slate-800 text-xs text-slate-300 rounded-md border border-slate-700 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="">All Projects</option>

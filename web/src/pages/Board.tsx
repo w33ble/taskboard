@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
   DndContext,
   DragOverlay,
@@ -38,7 +37,7 @@ import {
 import { useBoardEvents, type BoardEventType } from "../hooks/useBoardEvents";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
-import { writeLastBoardProject } from "../lib/lastBoard";
+import { useSelectedProject } from "../hooks/useSelectedProject";
 
 const STATUSES = ["todo", "in_progress", "done"];
 const STATUS_LABELS: Record<string, string> = {
@@ -268,14 +267,10 @@ function Column({
 export default function Board() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedProject = searchParams.get("project") ?? "";
+  const { selectedProject, selectProject } = useSelectedProject();
   const setSelectedProject = (id: string) => {
     if (id !== selectedProject) setLoading(true);
-    // Written synchronously so the nav link cannot read a stale value in the
-    // same commit that clears the selection ("All boards").
-    writeLastBoardProject(id);
-    setSearchParams(id ? { project: id } : {});
+    selectProject(id);
   };
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
@@ -288,12 +283,6 @@ export default function Board() {
     activeTicketRef.current = activeTicket;
   }, [activeTicket]);
 
-  useEffect(() => {
-    // Only ever records a board. Clearing is an explicit act ("All boards") and
-    // happens synchronously in setSelectedProject, so landing on a bare "/"
-    // does not forget the board the user was on.
-    if (selectedProject) writeLastBoardProject(selectedProject);
-  }, [selectedProject]);
   const dirtyRef = useRef(false);
   const boardRequestId = useRef(0);
 
