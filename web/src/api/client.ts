@@ -60,12 +60,16 @@ export interface Ticket {
   attachments?: Attachment[];
 }
 
-export type TicketCreateData = Partial<Omit<Ticket, 'labels' | 'subtasks' | 'blockedBy'>> & {
+export type TicketCreateData = Partial<
+  Omit<Ticket, "labels" | "subtasks" | "blockedBy">
+> & {
   labels?: string[];
   blockedBy?: string[];
 };
 
-export type TicketUpdateData = Partial<Omit<Ticket, 'labels' | 'subtasks' | 'blockedBy'>> & {
+export type TicketUpdateData = Partial<
+  Omit<Ticket, "labels" | "subtasks" | "blockedBy">
+> & {
   labels?: string[];
   blockedBy?: string[];
 };

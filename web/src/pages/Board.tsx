@@ -26,7 +26,15 @@ import {
   Plus,
 } from "lucide-react";
 import LabelBadge from "../components/LabelBadge";
-import { api, type Ticket, type Project, type Team, type BoardColumn, type TicketUpdateData, type TicketCreateData } from "../api/client";
+import {
+  api,
+  type Ticket,
+  type Project,
+  type Team,
+  type BoardColumn,
+  type TicketUpdateData,
+  type TicketCreateData,
+} from "../api/client";
 import { useBoardEvents, type BoardEventType } from "../hooks/useBoardEvents";
 import TicketPanel from "../components/TicketPanel";
 import CreateTicketModal from "../components/CreateTicketModal";
@@ -43,12 +51,13 @@ const STATUS_COLORS: Record<string, string> = {
   done: "bg-green-500",
 };
 
-const PRIORITY_CONFIG: Record<string, { color: string; icon: typeof ArrowUp }> = {
-  urgent: { color: "text-red-500", icon: AlertTriangle },
-  high: { color: "text-orange-500", icon: ArrowUp },
-  medium: { color: "text-yellow-500", icon: ArrowRight },
-  low: { color: "text-green-500", icon: ArrowDown },
-};
+const PRIORITY_CONFIG: Record<string, { color: string; icon: typeof ArrowUp }> =
+  {
+    urgent: { color: "text-red-500", icon: AlertTriangle },
+    high: { color: "text-orange-500", icon: ArrowUp },
+    medium: { color: "text-yellow-500", icon: ArrowRight },
+    low: { color: "text-green-500", icon: ArrowDown },
+  };
 
 function PriorityBadge({ priority }: { priority: string }) {
   const config = PRIORITY_CONFIG[priority];
@@ -188,7 +197,12 @@ function DraggableTicket({
       {...attributes}
       className={`cursor-grab active:cursor-grabbing ${isDragging ? "opacity-30" : ""}`}
     >
-      <TicketCard ticket={ticket} projects={projects} teams={teams} onClick={onClick} />
+      <TicketCard
+        ticket={ticket}
+        projects={projects}
+        teams={teams}
+        onClick={onClick}
+      />
     </div>
   );
 }
@@ -284,6 +298,7 @@ export default function Board() {
           setColumns(STATUSES.map((status) => ({ status, tickets: [] })))
         )
         .finally(() => setLoading(false)),
+    // oxlint-disable-next-line react/memo-dependencies -- selectedProject is the only reactive read; api/STATUSES are module-scope and setters are stable
     [selectedProject]
   );
 
@@ -292,8 +307,14 @@ export default function Board() {
   }, [loadBoard]);
 
   const loadProjectsAndTeams = useCallback(() => {
-    api.projects.list().then(setProjects).catch(() => setProjects([]));
-    api.teams.list().then(setTeams).catch(() => setTeams([]));
+    api.projects
+      .list()
+      .then(setProjects)
+      .catch(() => setProjects([]));
+    api.teams
+      .list()
+      .then(setTeams)
+      .catch(() => setTeams([]));
   }, []);
 
   useEffect(() => {
@@ -354,12 +375,18 @@ export default function Board() {
     setColumns((prev) =>
       prev.map((col) => {
         if (col.status === activeStatus) {
-          return { ...col, tickets: col.tickets.filter((t) => t.id !== active.id) };
+          return {
+            ...col,
+            tickets: col.tickets.filter((t) => t.id !== active.id),
+          };
         }
         if (col.status === overStatus) {
           const ticket = findTicketById(active.id);
           if (!ticket) return col;
-          return { ...col, tickets: [...col.tickets, { ...ticket, status: overStatus }] };
+          return {
+            ...col,
+            tickets: [...col.tickets, { ...ticket, status: overStatus }],
+          };
         }
         return col;
       })
@@ -467,11 +494,16 @@ export default function Board() {
             <DragOverlay>
               {activeTicket ? (
                 <div className="w-80">
-                  <TicketCard ticket={activeTicket} projects={projects} teams={teams} isDragging />
+                  <TicketCard
+                    ticket={activeTicket}
+                    projects={projects}
+                    teams={teams}
+                    isDragging
+                  />
                 </div>
               ) : null}
             </DragOverlay>
-           </DndContext>
+          </DndContext>
         )}
       </div>
 

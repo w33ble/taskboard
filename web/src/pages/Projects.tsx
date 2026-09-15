@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, X, FolderKanban, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  X,
+  FolderKanban,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import Markdown from "react-markdown";
 import { api, type Project } from "../api/client";
 
@@ -34,7 +41,14 @@ function ProjectModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !prefix.trim()) return;
-    onSave({ name, prefix: prefix.toUpperCase(), description, icon, color, status });
+    onSave({
+      name,
+      prefix: prefix.toUpperCase(),
+      description,
+      icon,
+      color,
+      status,
+    });
   };
 
   return (
@@ -267,7 +281,7 @@ export default function Projects() {
                 </h3>
                 {project.description && (
                   <div className="mt-1">
-                     <div
+                    <div
                       className={`prose-card overflow-hidden ${
                         expandedDescs.has(project.id) ? "" : "line-clamp-4"
                       }`}
